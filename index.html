@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Practice</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind configuration for dark mode and custom colors
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#60A5FA',
+                        accent: '#8B5CF6',
+                        listening: '#22C55E', /* Green for listening state */
+                        speaking: '#F59E0B', /* Amber for speaking state */
+                        recording: '#EF4444', /* Red for recording state */
+                        danger: '#EF4444',
+                        light: {
+                            bg: '#F3F4F6',
+                            card: '#FFFFFF',
+                            text: '#111827',
+                            muted: '#6B7280',
+                            border: '#D1D5DB',
+                        },
+                        dark: {
+                            bg: '#111827',
+                            card: '#1F2937',
+                            text: '#F9FAFB',
+                            muted: '#9CA3AF',
+                            border: '#374151',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'sans-serif';
+            transition: background-color 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+        
+        body.dark {
+            background-color: #111827;
+        }
+
+        .video-container {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 2px solid transparent;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .video-container.dark {
+            background: linear-gradient(to right, #374151, #1F2937);
+        }
+
+        .video-container.listening {
+            border-color: #22C55E; /* Green border when mic is active */
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        #user-video {
+            transform: scaleX(-1);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1F2937;
+        }
+
+        .avatar-container img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 80%;
+            width: 500px;
+            color: #f9fafb;
+            text-align: left;
+            position: relative;
+        }
+
+        .speaking-border {
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: #F59E0B;
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+            50% {
+                border-color: #FCD34D;
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+            100% {
+                border-color: #F59E0B;
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2e3b4a;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body class="dark flex items-center justify-center min-h-screen bg-dark-bg text-dark-text">
+    <div id="app" class="flex flex-col items-center justify-center w-full bg-dark-card rounded-3xl shadow-2xl p-4 sm:p-8 transition-all duration-500 relative">
+
+        <!-- Header with logo and title -->
+        <div class="flex items-center justify-center gap-4 mb-8">
+            <svg class="w-10 h-10 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+            </svg>
+            <h1 class="text-4xl font-bold tracking-tight">AI Interview Practice</h1>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center transition-opacity duration-500">
+            <h2 class="text-3xl font-semibold mb-4">Welcome!</h2>
+            <p class="text-lg text-dark-muted mb-8">Select your experience level and enter your interview topic to get started.</p>
+            <input type="text" id="interview-topic-input" placeholder="e.g., Software Engineering, Marketing Manager" class="w-full max-w-sm px-4 py-3 mb-6 text-lg bg-dark-bg text-dark-text rounded-lg border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary">
+            <div class="flex gap-4 items-center justify-center">
+                <button id="fresher-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50">
+                    I'm a Fresher
+                </button>
+                <button id="experienced-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50">
+                    I'm Experienced
+                </button>
+            </div>
+        </div>
+
+        <!-- Interview Screen -->
+        <div id="interview-screen" class="hidden w-full transition-opacity duration-500">
+            <div class="flex flex-col md:flex-row gap-8 mb-8">
+                <!-- AI Interviewer Card -->
+                <div id="interviewer-card" class="w-full md:w-1/2 flex flex-col bg-dark-card p-6 rounded-2xl shadow-xl text-left border border-dark-border">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                            <img src="https://placehold.co/100x100/1F2937/FFFFFF?text=AI" alt="AI Interviewer Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="text-xl font-semibold">Interviewer</h3>
+                    </div>
+                    <div class="bg-dark-bg p-4 rounded-xl shadow-inner flex-grow">
+                        <p id="interviewer-text" class="text-dark-muted text-lg italic min-h-[48px] hidden">The interviewer is thinking...</p>
+                        <p id="interviewer-thinking" class="text-dark-muted text-lg italic min-h-[48px]">The interviewer is thinking...</p>
+                    </div>
+                </div>
+                <!-- User's Video Feed -->
+                <div class="w-full md:w-1/2 flex flex-col bg-dark-card p-6 rounded-2xl shadow-xl text-left border border-dark-border">
+                    <div class="flex items-center gap-4 mb-4">
+                         <svg class="w-8 h-8 text-dark-text" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                        </svg>
+                        <h3 class="text-xl font-semibold">Your Video</h3>
+                    </div>
+                    <div id="user-video-container" class="video-container dark shadow-inner flex-grow">
+                        <video id="user-video" autoplay muted playsinline class="w-full h-full"></video>
+                        <div id="video-placeholder" class="w-full h-full absolute inset-0 flex items-center justify-center bg-gray-800 text-white">
+                            Waiting for camera access...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Your Response Card and Controls -->
+            <div class="w-full bg-dark-card p-6 rounded-2xl shadow-xl text-left border border-dark-border mb-8">
+                <div class="flex items-center gap-4 mb-4">
+                    <svg class="w-8 h-8 text-dark-text" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                    </svg>
+                    <h3 class="text-xl font-semibold">Your Response</h3>
+                </div>
+                <div class="bg-dark-bg p-4 rounded-xl shadow-inner mb-4">
+                    <p id="user-text" class="text-dark-muted text-lg italic min-h-[48px]">Your answer will appear here...</p>
+                </div>
+                <!-- Progress and Control Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+                    <div class="flex-grow w-full sm:w-auto">
+                        <p id="status-message" class="text-sm text-dark-muted italic text-center sm:text-left mb-2 sm:mb-0">Waiting for the question...</p>
+                        <div class="relative w-full h-2 bg-dark-border rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-primary transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 flex-wrap justify-center sm:justify-start">
+                        <button id="end-interview-button" class="bg-danger text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-danger focus:ring-opacity-50 w-full sm:w-auto">
+                            End Interview
+                        </button>
+                        <button id="speak-button" class="bg-accent text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-accent focus:ring-opacity-50 w-full sm:w-auto">
+                            Start Speaking
+                        </button>
+                        <button id="submit-button" class="hidden bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full sm:w-auto">
+                            Submit Answer
+                        </button>
+                         <button id="better-answer-button" class="hidden bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 w-full sm:w-auto">
+                            ✨ Get a better answer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Message Box for better user feedback -->
+            <div id="message-box" class="hidden mt-4 p-4 rounded-xl text-sm transition-opacity duration-300"></div>
+        </div>
+
+        <!-- Feedback Screen -->
+        <div id="feedback-screen" class="hidden w-full text-center transition-opacity duration-500">
+            <h2 class="text-3xl font-semibold mb-4">Interview Complete!</h2>
+            <div id="feedback-content" class="text-left bg-dark-bg p-6 rounded-2xl shadow-inner text-dark-text mb-8">
+                <p>Generating feedback...</p>
+            </div>
+            <a id="download-link" class="hidden bg-accent text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-accent focus:ring-opacity-50" href="#">
+                Download Recording
+            </a>
+            <button id="restart-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 mt-4">
+                Restart Practice
+            </button>
+        </div>
+        
+        <!-- Modal for Better Answer -->
+        <div id="better-answer-modal" class="modal-overlay">
+            <div class="modal-content">
+                <button id="close-modal-button" class="absolute top-4 right-4 text-dark-muted hover:text-dark-text transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                <h3 class="text-2xl font-bold mb-4">A Better Answer</h3>
+                <div id="better-answer-content" class="text-lg bg-dark-bg p-4 rounded-lg custom-scrollbar max-h-64 overflow-y-auto">
+                    <p>Generating a model response...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // --- Global Variables and Setup ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
+        // IMPORTANT: I have inserted your API key here so the app will work on GitHub Pages.
+        // If you get a new key, you MUST replace this string with the new key.
+        const apiKey = "AIzaSyCge5RvmYXNMmeFssCz7JcoJq9_iUu-Yx4"; 
+        
+        // --- Audio Context for TTS Playback ---
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let currentAudioSource = null;
+
+        // UI elements
+        const startScreen = document.getElementById('start-screen');
+        const interviewScreen = document.getElementById('interview-screen');
+        const feedbackScreen = document.getElementById('feedback-screen');
+        const fresherButton = document.getElementById('fresher-button');
+        const experiencedButton = document.getElementById('experienced-button');
+        const speakButton = document.getElementById('speak-button');
+        const submitButton = document.getElementById('submit-button');
+        const endInterviewButton = document.getElementById('end-interview-button');
+        const betterAnswerButton = document.getElementById('better-answer-button');
+        const restartButton = document.getElementById('restart-button');
+        const interviewerCard = document.getElementById('interviewer-card');
+        const interviewerText = document.getElementById('interviewer-text');
+        const interviewerThinking = document.getElementById('interviewer-thinking');
+        const userText = document.getElementById('user-text');
+        const feedbackContent = document.getElementById('feedback-content');
+        const statusMessage = document.getElementById('status-message');
+        const messageBox = document.getElementById('message-box');
+        const userVideo = document.getElementById('user-video');
+        const userVideoContainer = document.getElementById('user-video-container');
+        const videoPlaceholder = document.getElementById('video-placeholder');
+        const downloadLink = document.getElementById('download-link');
+        const progressBar = document.getElementById('progress-bar');
+        const interviewTopicInput = document.getElementById('interview-topic-input');
+        const betterAnswerModal = document.getElementById('better-answer-modal');
+        const betterAnswerContent = document.getElementById('better-answer-content');
+        const closeModalButton = document.getElementById('close-modal-button');
+        
+        // --- State Management ---
+        let chatHistory = [];
+        let interviewStage = 0;
+        let isSpeaking = false;
+        let recognition;
+        let userType = null;
+        let interviewTopic = '';
+        let lastQuestion = '';
+        let mediaRecorder;
+        let recordedChunks = [];
+        let cameraStream;
+
+        // --- Utility Functions ---
+
+        const updateProgressBar = () => {
+            progressBar.style.width = `100%`;
+        };
+
+        const showScreen = (screenToShow) => {
+            [startScreen, interviewScreen, feedbackScreen].forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            screenToShow.classList.remove('hidden');
+        };
+
+        const showMessage = (text, type = 'info') => {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-900', 'text-red-300', 'bg-green-900', 'text-green-300', 'bg-blue-900', 'text-blue-300');
+            messageBox.classList.add('block', 'opacity-0', 'transition-opacity');
+
+            switch (type) {
+                case 'error':
+                    messageBox.classList.add('bg-red-900', 'text-red-300');
+                    break;
+                case 'success':
+                    messageBox.classList.add('bg-green-900', 'text-green-300');
+                    break;
+                case 'info':
+                default:
+                    messageBox.classList.add('bg-blue-900', 'text-blue-300');
+                    break;
+            }
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-0');
+                messageBox.classList.add('opacity-100');
+            }, 10);
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100');
+                messageBox.classList.add('opacity-0');
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 300);
+            }, 5000);
+        };
+        
+        const startRecording = async () => {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+                userVideo.srcObject = cameraStream;
+                userVideo.onloadedmetadata = () => {
+                    userVideo.play();
+                    videoPlaceholder.classList.add('hidden');
+                };
+
+                cameraStream.getVideoTracks()[0].onended = () => {
+                    stopRecording();
+                    showMessage("Camera feed stopped. Recording has ended.", 'info');
+                };
+
+                recordedChunks = [];
+                const options = { mimeType: 'video/webm; codecs=vp9' };
+                mediaRecorder = new MediaRecorder(cameraStream, options);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, {
+                        type: 'video/webm'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.download = 'ai-interview-recording.webm';
+                    downloadLink.classList.remove('hidden');
+                };
+
+                mediaRecorder.start();
+                showMessage("Interview recording started.", 'success');
+
+                await getQuestion();
+
+            } catch (err) {
+                console.error("Error accessing media devices:", err);
+                videoPlaceholder.classList.remove('hidden');
+                videoPlaceholder.textContent = "Camera/mic access denied.";
+            }
+        };
+
+        const stopRecording = () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                }
+            }
+        };
+
+        const base64ToArrayBuffer = (base64) => {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        };
+
+        const pcmToWav = (pcmData, sampleRate) => {
+            const dataLength = pcmData.length * 2;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            const writeString = (view, offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(offset, pcmData[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        };
+        
+        const playAudio = async (audioData, mimeType) => {
+            interviewerCard.classList.add('speaking-border');
+            speakButton.disabled = true;
+            if (currentAudioSource) {
+                currentAudioSource.stop();
+            }
+
+            const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+            if (!sampleRateMatch) {
+                console.error("Could not determine sample rate from mime type.");
+                speakButton.disabled = false;
+                interviewerCard.classList.remove('speaking-border');
+                return;
+            }
+            const sampleRate = parseInt(sampleRateMatch[1], 10);
+            
+            const pcmData = new Int16Array(base64ToArrayBuffer(audioData));
+            const wavBlob = pcmToWav(pcmData, sampleRate);
+            
+            const audioUrl = URL.createObjectURL(wavBlob);
+            const audio = new Audio(audioUrl);
+            
+            audio.onended = () => {
+                interviewerCard.classList.remove('speaking-border');
+                speakButton.disabled = false;
+                statusMessage.textContent = "The interviewer has asked their question. Click 'Start Speaking' to give your answer.";
+            };
+
+            audio.play().catch(e => {
+                console.error("Audio playback failed:", e);
+                interviewerCard.classList.remove('speaking-border');
+                speakButton.disabled = false;
+                statusMessage.textContent = "Error playing audio. Please try again.";
+            });
+        };
+        
+        const getAudioForText = async (text) => {
+            const audioPayload = {
+                 contents: [{ role: "user", parts: [{ text: text }] }],
+                 generationConfig: {
+                     responseModalities: ["AUDIO"],
+                     speechConfig: {
+                         voiceConfig: { prebuiltVoiceConfig: { voiceName: "Rasalgethi" } }
+                     }
+                 },
+                 model: "gemini-2.5-flash-preview-tts" 
+             };
+            const audioApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+            try {
+                const audioResponse = await fetch(audioApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(audioPayload)
+                });
+
+                if (!audioResponse.ok) {
+                     throw new Error(`API call for audio failed with status: ${audioResponse.status}. This may be due to an invalid or missing API key.`);
+                }
+
+                const audioResult = await audioResponse.json();
+                const audioPart = audioResult?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+
+                if (!audioPart) {
+                    throw new Error("Invalid audio response structure from API.");
+                }
+                
+                return {
+                    audioData: audioPart.inlineData.data,
+                    mimeType: audioPart.inlineData.mimeType
+                };
+
+            } catch (error) {
+                console.error('Error getting TTS audio:', error);
+                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please check your API key and try again.`;
+                showMessage(`Error getting TTS audio: ${error.message}.`, 'error');
+                chatHistory = [];
+                interviewStage = 0;
+            }
+        }
+
+
+        const getQuestion = async () => {
+            speakButton.disabled = true;
+            submitButton.classList.add('hidden');
+            betterAnswerButton.classList.add('hidden');
+            speakButton.classList.remove('hidden');
+            speakButton.textContent = "Start Speaking";
+            statusMessage.textContent = `Question ${interviewStage + 1}: Generating question...`;
+
+            interviewerText.classList.add('hidden');
+            interviewerThinking.classList.remove('hidden');
+            userText.textContent = "Your answer will appear here...";
+
+            let systemPrompt;
+            if (userType === 'fresher') {
+                if (interviewStage === 0) {
+                    systemPrompt = `You are a professional and friendly AI interviewer. Ask the user to introduce themselves. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ensure your question is concise and to the point, no more than 1-2 sentences.`;
+                } else if (interviewStage === 1) {
+                    systemPrompt = `You are a professional and friendly AI interviewer. The user is a fresher. The user just answered the previous question. Acknowledge their response and then ask a new, relevant interview question based on their answer. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ask a general behavioral or situational question to understand their motivation or skills. Ensure your question is concise, no more than 1-2 sentences. The previous conversation history is: ${JSON.stringify(chatHistory)}.`;
+                } else {
+                    systemPrompt = `You are a professional and friendly AI interviewer. The user just answered the previous question. Acknowledge their response briefly and then ask a new, relevant interview question. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ensure your question is concise and to the point, no more than 1-2 sentences. The previous conversation history is: ${JSON.stringify(chatHistory)}.`;
+                }
+            } else {
+                if (interviewStage === 0) {
+                    systemPrompt = `You are a professional and friendly AI interviewer for a ${interviewTopic} role. Ask the user to introduce themselves. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ensure your question is concise and to the point, no more than 1-2 sentences.`;
+                } else if (interviewStage === 1) {
+                    systemPrompt = `You are a professional and friendly AI interviewer for a ${interviewTopic} role. The user is experienced. The user just answered the previous question. Acknowledge their response and then ask a new question specifically about their work experience. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ask about their roles, responsibilities, projects, and why they want to change firms. Ensure your question is concise, no more than 1-2 sentences. The previous conversation history is: ${JSON.stringify(chatHistory)}.`;
+                } else {
+                    systemPrompt = `You are a professional and friendly AI interviewer for a ${interviewTopic} role. The user just answered the previous question. Acknowledge their response briefly and then ask a new, relevant interview question. Use simple, direct language and basic vocabulary. Do not use complex sentences or advanced terminology. Ensure your question is concise and to the point, no more than 1-2 sentences. The previous conversation history is: ${JSON.stringify(chatHistory)}.`;
+                }
+            }
+            
+            const textPayload = {
+                contents: [...chatHistory, { role: "user", parts: [{ text: systemPrompt }] }],
+            };
+            
+            const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const textResponse = await fetch(textApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(textPayload)
+                });
+                
+                if (!textResponse.ok) {
+                    throw new Error(`API call for text failed with status: ${textResponse.status}. This may be due to an invalid or missing API key.`);
+                }
+
+                const textResult = await textResponse.json();
+                const questionText = textResult.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!questionText) {
+                    throw new Error("Invalid text response structure from API.");
+                }
+                
+                interviewerThinking.classList.add('hidden');
+                interviewerText.textContent = questionText;
+                interviewerText.classList.remove('hidden');
+
+                chatHistory.push({ role: "model", parts: [{ text: questionText }] });
+                lastQuestion = questionText;
+                interviewStage++;
+                
+                const audioResponse = await getAudioForText(questionText);
+
+                if (audioResponse) {
+                    await playAudio(audioResponse.audioData, audioResponse.mimeType);
+                }
+
+            } catch (error) {
+                console.error('Error getting question:', error);
+                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please check your API key and try again.`;
+                showMessage(`Error getting question: ${error.message}.`, 'error');
+                chatHistory = [];
+                interviewStage = 0;
+            }
+        };
+
+
+        const startListening = () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                statusMessage.textContent = "Speech Recognition not supported in this browser. Please use Chrome or a similar browser.";
+                showMessage("Speech Recognition not supported in this browser.", 'error');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognition.continuous = true;
+
+            let finalTranscript = '';
+
+            recognition.onstart = () => {
+                isSpeaking = true;
+                userVideoContainer.classList.add('listening');
+                statusMessage.textContent = "Listening for your response...";
+                showMessage("Microphone active. Please speak clearly.", 'info');
+                userText.textContent = "";
+                speakButton.textContent = 'Stop Speaking';
+                speakButton.classList.remove('bg-accent');
+                speakButton.classList.add('bg-listening');
+                submitButton.classList.add('hidden');
+                betterAnswerButton.classList.add('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                userText.textContent = finalTranscript + interimTranscript;
+            };
+
+            recognition.onend = () => {
+                userVideoContainer.classList.remove('listening');
+                isSpeaking = false;
+                speakButton.textContent = 'Start Speaking';
+                speakButton.classList.remove('bg-listening');
+                speakButton.classList.add('bg-accent');
+                if (finalTranscript.trim() !== "") {
+                    statusMessage.textContent = "Speech recognition finished. Click 'Submit Answer' when you're ready.";
+                    speakButton.classList.add('hidden');
+                    submitButton.classList.remove('hidden');
+                    submitButton.disabled = false;
+                } else {
+                    statusMessage.textContent = "No speech detected. Please try again.";
+                    showMessage("No speech detected. Please try again.", 'error');
+                    speakButton.classList.remove('hidden');
+                    submitButton.classList.add('hidden');
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    stopListening();
+                    userVideoContainer.classList.remove('listening');
+                    isSpeaking = false;
+                    statusMessage.textContent = "No speech detected. Please click 'Start Speaking' to try again.";
+                    showMessage("No speech detected. Please speak into the microphone.", 'error');
+                    
+                    speakButton.textContent = 'Start Speaking';
+                    speakButton.classList.remove('bg-listening');
+                    speakButton.classList.add('bg-accent');
+                    speakButton.classList.remove('hidden');
+                    submitButton.classList.add('hidden');
+
+                } else {
+                    statusMessage.textContent = `Speech recognition error: ${event.error}. Please try again.`;
+                    showMessage(`Speech recognition error: ${event.error}.`, 'error');
+                    isSpeaking = false;
+                    userVideoContainer.classList.remove('listening');
+                }
+            };
+
+            recognition.start();
+        };
+
+        const stopListening = () => {
+            if (recognition) {
+                isSpeaking = false;
+                recognition.stop();
+            }
+        };
+
+        const submitAnswer = async () => {
+            const answer = userText.textContent;
+            if (answer.trim() === "") {
+                 showMessage("Please speak an answer before submitting.", 'error');
+                 return;
+            }
+
+            speakButton.disabled = true;
+            submitButton.disabled = true;
+            statusMessage.textContent = "Submitting answer...";
+
+            chatHistory.push({ role: "user", parts: [{ text: answer }] });
+            
+            betterAnswerButton.classList.remove('hidden');
+            betterAnswerButton.disabled = false;
+            
+            await getQuestion();
+        };
+
+        const getBetterAnswer = async () => {
+            betterAnswerModal.classList.add('open');
+            betterAnswerContent.innerHTML = `<p class="italic text-dark-muted">Generating a model response...</p>`;
+
+            const betterAnswerPrompt = `The user is preparing for a ${interviewTopic} interview. They were asked "${lastQuestion}" and have provided their response. As a professional career coach, provide a concise, well-structured, and professional model answer for the user. Tailor the response to a ${userType} level. The user's provided answer was: "${userText.textContent}".`
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: betterAnswerPrompt }] }]
+            };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const modelAnswer = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (modelAnswer) {
+                    betterAnswerContent.innerHTML = `<p>${modelAnswer.replace(/\n/g, '<br><br>')}</p>`;
+                } else {
+                    throw new Error("Invalid response structure from API.");
+                }
+            } catch (error) {
+                console.error('Error getting better answer:', error);
+                betterAnswerContent.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Please try again.</p>`;
+                showMessage(`Error getting better answer: ${error.message}.`, 'error');
+            }
+        };
+
+        const endInterview = async () => {
+            stopRecording();
+            await getFeedback();
+        };
+
+        const getFeedback = async () => {
+            updateProgressBar();
+            showScreen(feedbackScreen);
+            feedbackContent.innerHTML = `<p class="text-center">Generating your personalized feedback... This might take a moment.</p>`;
+
+            const feedbackPrompt = `The interview for a ${interviewTopic} role is over. Provide professional and constructive feedback on the user's performance. Focus on their communication skills and the relevance of their answers. The user's experience level is ${userType}. The conversation history is: ${JSON.stringify(chatHistory)}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: feedbackPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "summary": { "type": "STRING" },
+                            "strengths": {
+                                "type": "ARRAY",
+                                "items": { "type": "STRING" }
+                            },
+                            "areasForImprovement": {
+                                "type": "ARRAY",
+                                "items": { "type": "STRING" }
+                            }
+                        }
+                    }
+                }
+            };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) {
+                    throw new Error("Invalid response structure from API or malformed JSON.");
+                }
+
+                const feedback = JSON.parse(jsonText);
+                
+                feedbackContent.innerHTML = `
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold mb-2">Summary</h3>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>${feedback.summary}</li>
+                        </ul>
+                    </div>
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold mb-2">Strengths</h3>
+                        <ul class="list-disc list-inside space-y-2">
+                            ${feedback.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Areas for Improvement</h3>
+                        <ul class="list-disc list-inside space-y-2">
+                            ${feedback.areasForImprovement.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error getting structured feedback:', error);
+                feedbackContent.innerHTML = `<p class="text-red-400 text-center">An error occurred while generating feedback: ${error.message}. Please check your API key and try again.</p>`;
+                showMessage(`Error getting feedback: ${error.message}.`, 'error');
+            }
+        };
+
+        const restartApp = () => {
+            chatHistory = [];
+            interviewStage = 0;
+            userType = null;
+            interviewTopic = '';
+            interviewTopicInput.value = '';
+            interviewerText.textContent = "The interviewer is thinking...";
+            userText.textContent = "Your answer will appear here...";
+            statusMessage.textContent = "Waiting for the question...";
+            downloadLink.classList.add('hidden');
+            speakButton.disabled = false;
+            submitButton.disabled = false;
+            betterAnswerButton.disabled = false;
+            betterAnswerButton.classList.add('hidden');
+            updateProgressBar();
+            showScreen(startScreen);
+        };
+
+        const handleStartInterview = async (type) => {
+            const topic = interviewTopicInput.value.trim();
+
+            if (type === 'experienced' && topic === '') {
+                showMessage("Please enter an interview topic to begin.", 'error');
+                return;
+            }
+
+            userType = type;
+            interviewTopic = topic;
+            showScreen(interviewScreen);
+            await startRecording();
+            updateProgressBar();
+        };
+
+        fresherButton.addEventListener('click', () => handleStartInterview('fresher'));
+        experiencedButton.addEventListener('click', () => handleStartInterview('experienced'));
+
+        speakButton.addEventListener('click', () => {
+            if (!isSpeaking) {
+                startListening();
+            } else {
+                stopListening();
+            }
+        });
+        
+        submitButton.addEventListener('click', submitAnswer);
+        betterAnswerButton.addEventListener('click', getBetterAnswer);
+        closeModalButton.addEventListener('click', () => betterAnswerModal.classList.remove('open'));
+
+        endInterviewButton.addEventListener('click', endInterview);
+
+        restartButton.addEventListener('click', restartApp);
+        
+        window.onload = () => {
+            showScreen(startScreen);
+            updateProgressBar();
+        };
+    </script>
+</body>
+</html>
