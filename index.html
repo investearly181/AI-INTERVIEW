@@ -304,9 +304,8 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
-        // IMPORTANT: I have inserted your API key here so the app will work on GitHub Pages.
-        // If you get a new key, you MUST replace this string with the new key.
-        const apiKey = "AIzaSyCge5RvmYXNMmeFssCz7JcoJq9_iUu-Yx4"; 
+        // The API key is intentionally left as an empty string. The environment will provide it at runtime.
+        const apiKey = ""; 
         
         // --- Audio Context for TTS Playback ---
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -571,7 +570,7 @@
 
             } catch (error) {
                 console.error('Error getting TTS audio:', error);
-                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please check your API key and try again.`;
+                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please try again.`;
                 showMessage(`Error getting TTS audio: ${error.message}.`, 'error');
                 chatHistory = [];
                 interviewStage = 0;
@@ -650,7 +649,7 @@
 
             } catch (error) {
                 console.error('Error getting question:', error);
-                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please check your API key and try again.`;
+                interviewerText.textContent = `Sorry, an error occurred: ${error.message}. Please try again.`;
                 showMessage(`Error getting question: ${error.message}.`, 'error');
                 chatHistory = [];
                 interviewStage = 0;
@@ -882,7 +881,7 @@
                 `;
             } catch (error) {
                 console.error('Error getting structured feedback:', error);
-                feedbackContent.innerHTML = `<p class="text-red-400 text-center">An error occurred while generating feedback: ${error.message}. Please check your API key and try again.</p>`;
+                feedbackContent.innerHTML = `<p class="text-red-400 text-center">An error occurred while generating feedback: ${error.message}. Please try again.</p>`;
                 showMessage(`Error getting feedback: ${error.message}.`, 'error');
             }
         };
