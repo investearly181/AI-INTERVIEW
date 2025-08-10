@@ -206,6 +206,10 @@
                     I'm Experienced
                 </button>
             </div>
+            <!-- New button to change API key -->
+            <button id="change-api-key-button" class="mt-4 text-sm text-dark-muted hover:text-primary transition-colors">
+                Change API Key
+            </button>
         </div>
 
         <!-- Interview Screen -->
@@ -331,6 +335,7 @@
         const feedbackScreen = document.getElementById('feedback-screen');
         const fresherButton = document.getElementById('fresher-button');
         const experiencedButton = document.getElementById('experienced-button');
+        const changeApiKeyButton = document.getElementById('change-api-key-button'); // New button element
         const speakButton = document.getElementById('speak-button');
         const submitButton = document.getElementById('submit-button');
         const endInterviewButton = document.getElementById('end-interview-button');
@@ -957,6 +962,11 @@
                 showScreen(apiKeyScreen);
             }
         };
+        
+        // This function handles showing the API key screen from the start screen
+        const showApiKeyScreen = () => {
+            showScreen(apiKeyScreen);
+        };
 
         const handleStartInterview = async (type) => {
             const topic = interviewTopicInput.value.trim();
@@ -993,6 +1003,7 @@
 
         fresherButton.addEventListener('click', () => handleStartInterview('fresher'));
         experiencedButton.addEventListener('click', () => handleStartInterview('experienced'));
+        changeApiKeyButton.addEventListener('click', showApiKeyScreen); // New event listener for the button
 
         speakButton.addEventListener('click', () => {
             if (!isSpeaking) {
