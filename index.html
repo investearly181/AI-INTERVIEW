@@ -198,16 +198,16 @@
             <h2 class="text-3xl font-semibold mb-4">Welcome!</h2>
             <p class="text-lg text-dark-muted mb-8">Select your experience level and enter your interview topic to get started.</p>
             <input type="text" id="interview-topic-input" placeholder="e.g., Software Engineering, Marketing Manager" class="w-full max-w-sm px-4 py-3 mb-6 text-lg bg-dark-bg text-dark-text rounded-lg border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary">
-            <div class="flex gap-4 items-center justify-center">
-                <button id="fresher-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50">
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                <button id="fresher-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full sm:w-auto">
                     I'm a Fresher
                 </button>
-                <button id="experienced-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50">
+                <button id="experienced-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full sm:w-auto">
                     I'm Experienced
                 </button>
             </div>
-            <!-- New button to change API key -->
-            <button id="change-api-key-button" class="mt-4 text-sm text-dark-muted hover:text-primary transition-colors">
+            <!-- The "Change API Key" button is now styled like a primary button -->
+            <button id="change-api-key-button" class="mt-6 bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full max-w-sm">
                 Change API Key
             </button>
         </div>
