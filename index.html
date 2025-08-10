@@ -183,8 +183,18 @@
             <h1 class="text-4xl font-bold tracking-tight">AI Interview Practice</h1>
         </div>
 
+        <!-- API Key Configuration Screen -->
+        <div id="api-key-screen" class="text-center transition-opacity duration-500">
+            <h2 class="text-2xl font-semibold mb-2">Enter Your API Key</h2>
+            <p class="text-lg text-dark-muted mb-4">You can get a free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-primary hover:underline">Google AI Studio</a>.</p>
+            <input type="password" id="api-key-input" placeholder="Paste your Gemini API key here" class="w-full max-w-sm px-4 py-3 mb-4 text-lg bg-dark-bg text-dark-text rounded-lg border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary">
+            <button id="save-api-key-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50">
+                Save and Continue
+            </button>
+        </div>
+
         <!-- Start Screen -->
-        <div id="start-screen" class="text-center transition-opacity duration-500">
+        <div id="start-screen" class="hidden text-center transition-opacity duration-500">
             <h2 class="text-3xl font-semibold mb-4">Welcome!</h2>
             <p class="text-lg text-dark-muted mb-8">Select your experience level and enter your interview topic to get started.</p>
             <input type="text" id="interview-topic-input" placeholder="e.g., Software Engineering, Marketing Manager" class="w-full max-w-sm px-4 py-3 mb-6 text-lg bg-dark-bg text-dark-text rounded-lg border border-dark-border focus:outline-none focus:ring-2 focus:ring-primary">
@@ -304,14 +314,18 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
-        // The API key is intentionally left as an empty string. The environment will provide it at runtime.
-        const apiKey = "AIzaSyCge5RvmYXNMmeFssCz7JcoJq9_iUu-Yx4"; 
+        
+        // Let the user set their own API key. This is a crucial change for a public app.
+        let apiKey = localStorage.getItem('userApiKey') || '';
         
         // --- Audio Context for TTS Playback ---
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let currentAudioSource = null;
 
         // UI elements
+        const apiKeyScreen = document.getElementById('api-key-screen');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyButton = document.getElementById('save-api-key-button');
         const startScreen = document.getElementById('start-screen');
         const interviewScreen = document.getElementById('interview-screen');
         const feedbackScreen = document.getElementById('feedback-screen');
@@ -358,7 +372,7 @@
         };
 
         const showScreen = (screenToShow) => {
-            [startScreen, interviewScreen, feedbackScreen].forEach(screen => {
+            [apiKeyScreen, startScreen, interviewScreen, feedbackScreen].forEach(screen => {
                 screen.classList.add('hidden');
             });
             screenToShow.classList.remove('hidden');
@@ -533,6 +547,11 @@
         };
         
         const getAudioForText = async (text) => {
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                return;
+            }
+
             const audioPayload = {
                  contents: [{ role: "user", parts: [{ text: text }] }],
                  generationConfig: {
@@ -579,6 +598,12 @@
 
 
         const getQuestion = async () => {
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
+
             speakButton.disabled = true;
             submitButton.classList.add('hidden');
             betterAnswerButton.classList.add('hidden');
@@ -756,6 +781,11 @@
                  showMessage("Please speak an answer before submitting.", 'error');
                  return;
             }
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
 
             speakButton.disabled = true;
             submitButton.disabled = true;
@@ -770,6 +800,12 @@
         };
 
         const getBetterAnswer = async () => {
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
+
             betterAnswerModal.classList.add('open');
             betterAnswerContent.innerHTML = `<p class="italic text-dark-muted">Generating a model response...</p>`;
 
@@ -807,11 +843,23 @@
         };
 
         const endInterview = async () => {
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
+
             stopRecording();
             await getFeedback();
         };
 
         const getFeedback = async () => {
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
+
             updateProgressBar();
             showScreen(feedbackScreen);
             feedbackContent.innerHTML = `<p class="text-center">Generating your personalized feedback... This might take a moment.</p>`;
@@ -901,11 +949,22 @@
             betterAnswerButton.disabled = false;
             betterAnswerButton.classList.add('hidden');
             updateProgressBar();
-            showScreen(startScreen);
+
+            // Check if API key is already set, if so, go to start screen
+            if (apiKey) {
+                showScreen(startScreen);
+            } else {
+                showScreen(apiKeyScreen);
+            }
         };
 
         const handleStartInterview = async (type) => {
             const topic = interviewTopicInput.value.trim();
+            if (!apiKey) {
+                showMessage("Please enter your API key to continue.", 'error');
+                showScreen(apiKeyScreen);
+                return;
+            }
 
             if (type === 'experienced' && topic === '') {
                 showMessage("Please enter an interview topic to begin.", 'error');
@@ -918,6 +977,19 @@
             await startRecording();
             updateProgressBar();
         };
+
+        // Event listeners for API key management
+        saveApiKeyButton.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('userApiKey', key);
+                apiKey = key;
+                showMessage("API key saved successfully!", 'success');
+                showScreen(startScreen);
+            } else {
+                showMessage("Please enter a valid API key.", 'error');
+            }
+        });
 
         fresherButton.addEventListener('click', () => handleStartInterview('fresher'));
         experiencedButton.addEventListener('click', () => handleStartInterview('experienced'));
@@ -939,7 +1011,11 @@
         restartButton.addEventListener('click', restartApp);
         
         window.onload = () => {
-            showScreen(startScreen);
+            if (apiKey) {
+                showScreen(startScreen);
+            } else {
+                showScreen(apiKeyScreen);
+            }
             updateProgressBar();
         };
     </script>
